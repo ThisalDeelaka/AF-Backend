@@ -1,0 +1,108 @@
+config:
+  target: "http://localhost:5000"  
+  phases:
+    - duration: 30  # 30 seconds with a low load
+      arrivalRate: 5  # 5 virtual users per second
+
+    - duration: 30  # 30 seconds with a medium load
+      arrivalRate: 20  # 20 virtual users per second
+
+    - duration: 30  # 30 seconds with a high load
+      arrivalRate: 50  # 50 virtual users per second
+
+scenarios:
+  - flow:
+      # Scenario 1: Simulate user interacting with the transactions endpoint
+      - get:
+          url: "/api/transactions"  # Fetch transactions
+      - post:
+          url: "/api/transactions"  # Create a new transaction
+          json:
+            amount: 100
+            category: "Salary"
+            tags: ["income"]
+            type: "income"
+            originalCurrency: "USD"
+            exchangeRate: 1
+            recurrence: "monthly"
+      - get:
+          url: "/api/transactions/export"  # Export transactions
+
+  - flow:
+      # Scenario 2: Simulate user interacting with the budget endpoint
+      - post:
+          url: "/api/budgets"  # Create a new budget
+          json:
+            category: "Food"
+            amount: 150
+      - get:
+          url: "/api/budgets"  # Fetch user's budgets
+      - post:
+          url: "/api/budgets/check"  # Check if any budget has been exceeded
+          
+  - flow:
+      # Scenario 3: Admin user interacting with user management endpoints
+      - get:
+          url: "/api/users"  # Admin fetches list of users
+      - post:
+          url: "/api/users"  # Admin creates a new user
+          json:
+            email: "newuser@example.com"
+            password: "password123"
+            role: "user"
+      - put:
+          url: "/api/users/1"  # Admin updates user info
+          json:
+            email: "updateduser@example.com"
+            password: "newpassword123"
+            role: "user"
+      - delete:
+          url: "/api/users/1"  # Admin deletes a user
+
+  - flow:
+      # Scenario 4: Simulate user interacting with goals and notifications
+      - post:
+          url: "/api/goals"  # Create a financial goal
+          json:
+            name: "Save for vacation"
+            targetAmount: 5000
+            dueDate: "2025-12-31T00:00:00.000Z"
+      - get:
+          url: "/api/goals"  # Fetch goals for the user
+      - post:
+          url: "/api/goals/send-reminder"  # Send reminder for an upcoming goal
+          json:
+            goalId: "1"
+      - post:
+          url: "/api/notifications"  # Create a notification
+          json:
+            message: "Goal reminder: Save for vacation"
+            type: "reminder"
+            
+  - flow:
+      # Scenario 5: Simulate admin accessing admin dashboard and generating reports
+      - get:
+          url: "/api/admin/dashboard"  # Admin fetches system stats
+      - get:
+          url: "/api/transactions/reports/detailed"  # Admin generates a detailed report
+          query:
+            startDate: "2025-01-01"
+            endDate: "2025-12-31"
+            category: "Food"
+
+  - flow:
+      # Scenario 6: Simulate a mix of interactions from users with multiple endpoints
+      - get:
+          url: "/api/notifications"  # Fetch notifications for a user
+      - post:
+          url: "/api/transactions"  # Create another transaction
+          json:
+            amount: 150
+            category: "Shopping"
+            tags: ["expense"]
+            type: "expense"
+            originalCurrency: "USD"
+            exchangeRate: 1
+            recurrence: "monthly"
+      - get:
+          url: "/api/users"  # Fetch users (accessible to admins only)
